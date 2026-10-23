@@ -60,6 +60,12 @@ h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; text-wrap: balance; 
 .num-2 { background: var(--p-bg); color: var(--p-fg); }
 .num-3 { background: var(--t-bg); color: var(--t-fg); }
 .num-4 { background: var(--a-bg); color: var(--a-fg); }
+.num-5 { background: var(--p-bg); color: var(--p-fg); }
+.metric-wide { grid-column: 1 / -1; }
+.cmp-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn { font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--tog-on-line); background: var(--tog-on-bg); color: var(--p-fg); cursor: pointer; font-weight: 600; }
+.btn.ghost { background: transparent; border-color: var(--line-ctl); color: var(--muted); font-weight: 400; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .source-title { font-size: 15px; font-weight: 600; }
 .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
 .badge-start { background: var(--g-bg); color: var(--g-fg); }
@@ -178,6 +184,16 @@ footer { text-align: center; font-size: 12px; color: var(--faint2); margin-top: 
   <div class="warn show" id="warn-sup">Авторський нагляд окупається тільки разом із комплектацією. Без неї — твій час коштує занадто мало.</div>
 </div>
 
+<div class="source">
+  <div class="source-header">
+    <div class="num num-5">5</div>
+    <span class="source-title">Скільки проєктів на рік</span>
+    <span class="badge badge-main">План на роки</span>
+  </div>
+  <div class="row"><label class="lbl" for="projects">Проєктів на рік</label><div class="controls"><input type="range" id="projects" min="1" max="24" step="1" value="4"><span class="val"><span id="projects-v">4</span></span></div></div>
+  <div class="result-box" id="res-5"></div>
+</div>
+
 <div class="section-lbl" style="margin-top:24px;">Підсумок по проєкту</div>
 
 <div class="results">
@@ -185,6 +201,8 @@ footer { text-align: center; font-size: 12px; color: var(--faint2); margin-top: 
   <div class="metric"><div class="metric-lbl">На місяць</div><div class="metric-val" id="r-month">—</div><div class="metric-sub">в середньому</div></div>
   <div class="metric"><div class="metric-lbl">Чисте проєктування</div><div class="metric-val" id="r-design">—</div><div class="metric-sub">мінус команда</div></div>
   <div class="metric"><div class="metric-lbl">Ціна години</div><div class="metric-val" id="r-hour">—</div><div class="metric-sub">проєктування</div></div>
+  <div class="metric"><div class="metric-lbl">Дохід за рік</div><div class="metric-val" id="r-year">—</div><div class="metric-sub" id="r-year-sub">проєктів × дохід з проєкту</div></div>
+  <div class="metric"><div class="metric-lbl">На місяць за рік</div><div class="metric-val" id="r-year-month">—</div><div class="metric-sub">дохід за рік ÷ 12</div></div>
 </div>
 
 <div class="breakdown">
@@ -197,6 +215,15 @@ footer { text-align: center; font-size: 12px; color: var(--faint2); margin-top: 
 </div>
 
 <div class="insight" id="insight-box"></div>
+
+<div class="breakdown" style="margin-top:12px;">
+  <div class="section-lbl">Порівняння сценаріїв</div>
+  <div class="result-box" id="cmp-box" style="margin-top:0">Налаштуйте сценарій і натисніть «Запам'ятати», потім змініть цифри й порівняйте.</div>
+  <div class="cmp-btns">
+    <button class="btn" id="cmp-save" type="button">Запам'ятати цей сценарій</button>
+    <button class="btn ghost" id="cmp-clear" type="button">Очистити</button>
+  </div>
+</div>
 
 <footer>Калькулятор доходу дизайнера · Сегмент визначає дохід, а не досвід</footer>
 
@@ -239,6 +266,20 @@ bind('comp-months','comp-months-v');
 bind('visits','visits-v');
 bind('visit-rate','visit-rate-v');
 bind('fix-rate','fix-rate-v');
+bind('projects','projects-v');
+
+let current = null, saved = null;
+function renderCmp() {
+  const box = document.getElementById('cmp-box');
+  if (!saved) { box.textContent = "Налаштуйте сценарій і натисніть «Запам'ятати», потім змініть цифри й порівняйте."; return; }
+  const d = current.year - saved.year;
+  const sign = d > 0 ? '+' : d < 0 ? '−' : '';
+  box.innerHTML = 'Запам\'ятано: <b>' + fmt(saved.year) + '</b> за рік (' + saved.desc + ')<br>' +
+    'Зараз: <b>' + fmt(current.year) + '</b> за рік (' + current.desc + ')<br>' +
+    'Різниця: <b>' + sign + fmt(Math.abs(d)) + '</b> за рік';
+}
+document.getElementById('cmp-save').addEventListener('click', () => { saved = { year: current.year, desc: current.desc }; renderCmp(); });
+document.getElementById('cmp-clear').addEventListener('click', () => { saved = null; renderCmp(); });
 
 function g(id) { return parseFloat(document.getElementById(id).value); }
 
@@ -303,6 +344,15 @@ function calc() {
   document.getElementById('b-comp').textContent = fmt(compTotal);
   document.getElementById('b-sup').textContent = fmt(supTotal);
   document.getElementById('b-total').textContent = fmt(grandTotal);
+
+  const projects = g('projects');
+  const yearTotal = projectTotal * projects;
+  document.getElementById('r-year').textContent = fmt(yearTotal);
+  document.getElementById('r-year-month').textContent = fmt(yearTotal / 12);
+  document.getElementById('res-5').innerHTML =
+    fmtN(projects) + ' × <b>' + fmt(projectTotal) + '</b> = <b>' + fmt(yearTotal) + '</b> за рік · у середньому <b>' + fmt(yearTotal / 12) + '</b> на місяць';
+  current = { year: yearTotal, desc: fmtN(projects) + ' проєктів · $' + fmtN(rateSqm) + '/м² · ' + fmtN(sqm) + ' м²' + (compPct ? ' · комісія ' + Math.round(compPct*100) + '%' : '') };
+  renderCmp();
 
   const insight = document.getElementById('insight-box');
   const compShare = Math.round(compTotal / grandTotal * 100);
