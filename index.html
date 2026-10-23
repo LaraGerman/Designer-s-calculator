@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор доходу дизайнера</title>
+<style>
+/* Layout: одна колонка 680px, чотири блоки-джерела доходу, нижче підсумок */
+:root {
+  --bg: #F7F7F5; --card: #FFFFFF; --line: #E8E8E4; --line-soft: #F0F0EC; --line-ctl: #D8D8D4;
+  --fg: #1A1A1A; --muted: #666666; --faint: #888888; --faint2: #AAAAAA; --inset: #F7F7F5;
+  --accent: #534AB7;
+  --g-bg: #EAF3DE; --g-fg: #27500A; --g-dot: #639922;
+  --p-bg: #EEEDFE; --p-fg: #3C3489; --p-dot: #7F77DD;
+  --t-bg: #E1F5EE; --t-fg: #085041; --t-dot: #1D9E75;
+  --a-bg: #FAEEDA; --a-fg: #633806; --a-dot: #BA7517;
+  --tog-on-bg: #F0EFF8; --tog-on-line: #AFA9EC;
+  --warn-bg: #FEF9EC; --warn-fg: #854F0B; --warn-line: #FAC775;
+  --insight-bg: #F0EFF8; --insight-fg: #3C3489;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15151A; --card: #1E1E25; --line: #2E2E38; --line-soft: #292932; --line-ctl: #3C3C48;
+    --fg: #F1F1EE; --muted: #A8A8B3; --faint: #8C8C98; --faint2: #6E6E7A; --inset: #17171C;
+    --accent: #8F88EA;
+    --g-bg: #223318; --g-fg: #B7DB93; --g-dot: #8CC24A;
+    --p-bg: #2A2850; --p-fg: #C4C0F7; --p-dot: #9A93F0;
+    --t-bg: #12352B; --t-fg: #8EE0C2; --t-dot: #35BE91;
+    --a-bg: #3B2A12; --a-fg: #F0C487; --a-dot: #DD9A3E;
+    --tog-on-bg: #2A2850; --tog-on-line: #6E67C9;
+    --warn-bg: #33270F; --warn-fg: #F0C487; --warn-line: #7A5A1E;
+    --insight-bg: #26244A; --insight-fg: #C4C0F7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15151A; --card: #1E1E25; --line: #2E2E38; --line-soft: #292932; --line-ctl: #3C3C48;
+  --fg: #F1F1EE; --muted: #A8A8B3; --faint: #8C8C98; --faint2: #6E6E7A; --inset: #17171C;
+  --accent: #8F88EA;
+  --g-bg: #223318; --g-fg: #B7DB93; --g-dot: #8CC24A;
+  --p-bg: #2A2850; --p-fg: #C4C0F7; --p-dot: #9A93F0;
+  --t-bg: #12352B; --t-fg: #8EE0C2; --t-dot: #35BE91;
+  --a-bg: #3B2A12; --a-fg: #F0C487; --a-dot: #DD9A3E;
+  --tog-on-bg: #2A2850; --tog-on-line: #6E67C9;
+  --warn-bg: #33270F; --warn-fg: #F0C487; --warn-line: #7A5A1E;
+  --insight-bg: #26244A; --insight-fg: #C4C0F7;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--fg);
+  padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.page { max-width: 680px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; text-wrap: balance; }
+.subtitle { font-size: 14px; color: var(--faint); margin-bottom: 24px; }
+.source { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+.source-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.num-1 { background: var(--g-bg); color: var(--g-fg); }
+.num-2 { background: var(--p-bg); color: var(--p-fg); }
+.num-3 { background: var(--t-bg); color: var(--t-fg); }
+.num-4 { background: var(--a-bg); color: var(--a-fg); }
+.source-title { font-size: 15px; font-weight: 600; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-left: auto; white-space: nowrap; }
+.badge-start { background: var(--g-bg); color: var(--g-fg); }
+.badge-main { background: var(--p-bg); color: var(--p-fg); }
+.badge-big { background: var(--t-bg); color: var(--t-fg); }
+.row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.row:last-of-type { margin-bottom: 0; }
+.lbl { font-size: 13px; color: var(--muted); flex: 1; line-height: 1.4; min-width: 0; }
+.controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+input[type=range] { width: 110px; height: 4px; accent-color: var(--accent); cursor: pointer; }
+.val { font-size: 13px; font-weight: 600; min-width: 88px; text-align: right; font-variant-numeric: tabular-nums; }
+.result-box { margin-top: 12px; padding: 10px 12px; background: var(--inset); border-radius: 8px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.result-box b { color: var(--fg); font-weight: 600; }
+.tog-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.tog { font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--line-ctl); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+.tog.on { background: var(--tog-on-bg); color: var(--p-fg); border-color: var(--tog-on-line); font-weight: 600; }
+.tog:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.warn { font-size: 12px; padding: 8px 12px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-fg); margin-top: 10px; display: none; border: 1px solid var(--warn-line); }
+.warn.show { display: block; }
+.section-lbl { font-size: 11px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+.results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 20px 0 12px; }
+.metric { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+.metric-lbl { font-size: 11px; color: var(--faint); margin-bottom: 6px; }
+.metric-val { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.metric-sub { font-size: 11px; color: var(--faint); margin-top: 3px; }
+.breakdown { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.brow { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.brow:last-child { border-bottom: none; font-weight: 700; font-size: 15px; padding-top: 12px; margin-top: 4px; }
+.blbl { color: var(--muted); }
+.brow:last-child .blbl { color: var(--fg); }
+.bval { font-weight: 600; font-variant-numeric: tabular-nums; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; }
+.dot-1 { background: var(--g-dot); }
+.dot-2 { background: var(--p-dot); }
+.dot-3 { background: var(--t-dot); }
+.dot-4 { background: var(--a-dot); }
+.insight { background: var(--insight-bg); border-radius: 10px; padding: 14px 16px; margin-top: 12px; font-size: 13px; color: var(--insight-fg); line-height: 1.6; display: none; }
+.insight.show { display: block; }
+.insight b { font-weight: 700; }
+footer { text-align: center; font-size: 12px; color: var(--faint2); margin-top: 32px; }
+@media (max-width: 480px) {
+  .source { padding: 16px; }
+  .row { flex-wrap: wrap; }
+  .lbl { flex-basis: 100%; }
+  .controls { width: 100%; }
+  input[type=range] { flex: 1; width: auto; min-width: 0; }
+  .val { min-width: 84px; }
+  .metric-val { font-size: 20px; }
+  .badge { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .tog { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<h1>Калькулятор доходу дизайнера</h1>
+<p class="subtitle">4 джерела доходу — від перших грошей до великих проєктів</p>
+
+<div class="source">
+  <div class="source-header">
+    <div class="num num-1">1</div>
+    <span class="source-title">Реферал від ріелтора</span>
+    <span class="badge badge-start">Перші гроші</span>
+  </div>
+  <div class="row"><label class="lbl" for="prop-val">Вартість об'єкта</label><div class="controls"><input type="range" id="prop-val" min="50000" max="2000000" step="10000" value="150000"><span class="val">$<span id="prop-val-v">150 000</span></span></div></div>
+  <div class="row"><label class="lbl" for="realtor-pct">Комісія ріелтора</label><div class="controls"><input type="range" id="realtor-pct" min="1" max="6" step="0.5" value="3"><span class="val"><span id="realtor-pct-v">3</span>%</span></div></div>
+  <div class="row"><label class="lbl" for="ref-pct">Твій реферал від комісії</label><div class="controls"><input type="range" id="ref-pct" min="5" max="50" step="5" value="10"><span class="val"><span id="ref-pct-v">10</span>%</span></div></div>
+  <div class="result-box" id="res-1"></div>
+</div>
+
+<div class="source">
+  <div class="source-header">
+    <div class="num num-2">2</div>
+    <span class="source-title">Проєктування</span>
+    <span class="badge badge-main">Вхід у проєкт</span>
+  </div>
+  <div class="row"><label class="lbl" for="sqm">Площа об'єкта</label><div class="controls"><input type="range" id="sqm" min="30" max="600" step="10" value="200"><span class="val"><span id="sqm-v">200</span> м²</span></div></div>
+  <div class="row"><label class="lbl" for="rate-sqm">Ставка за м²</label><div class="controls"><input type="range" id="rate-sqm" min="10" max="300" step="5" value="50"><span class="val">$<span id="rate-sqm-v">50</span></span></div></div>
+  <div class="row"><label class="lbl" for="team-cost">Мінус команда (візуалізація + креслення)</label><div class="controls"><input type="range" id="team-cost" min="0" max="40" step="1" value="12"><span class="val">$<span id="team-cost-v">12</span>/м²</span></div></div>
+  <div class="row"><label class="lbl" for="design-months">Термін проєктування</label><div class="controls"><input type="range" id="design-months" min="1" max="12" step="1" value="6"><span class="val"><span id="design-months-v">6</span> міс</span></div></div>
+  <div class="result-box" id="res-2"></div>
+</div>
+
+<div class="source">
+  <div class="source-header">
+    <div class="num num-3">3</div>
+    <span class="source-title">Комплектація</span>
+    <span class="badge badge-big">Головні гроші</span>
+  </div>
+  <div class="row"><label class="lbl" for="budget-sqm">Бюджет закупівель ($/м²)</label><div class="controls"><input type="range" id="budget-sqm" min="200" max="8000" step="100" value="2000"><span class="val">$<span id="budget-sqm-v">2 000</span></span></div></div>
+  <div class="row"><label class="lbl" for="comp-pct">Комісія дизайнера</label><div class="controls"><input type="range" id="comp-pct" min="5" max="35" step="1" value="10"><span class="val"><span id="comp-pct-v">10</span>%</span></div></div>
+  <div class="row"><label class="lbl" for="comp-months">Термін реалізації</label><div class="controls"><input type="range" id="comp-months" min="1" max="24" step="1" value="12"><span class="val"><span id="comp-months-v">12</span> міс</span></div></div>
+  <div class="result-box" id="res-3"></div>
+</div>
+
+<div class="source">
+  <div class="source-header">
+    <div class="num num-4">4</div>
+    <span class="source-title">Авторський нагляд</span>
+  </div>
+  <div class="tog-row">
+    <button class="tog on" id="tog-off" type="button">Не включати</button>
+    <button class="tog" id="tog-visit" type="button">За виїзд</button>
+    <button class="tog" id="tog-fix" type="button">На місяць</button>
+  </div>
+  <div id="sup-visit" hidden>
+    <div class="row"><label class="lbl" for="visits">Виїздів на місяць</label><div class="controls"><input type="range" id="visits" min="1" max="20" step="1" value="4"><span class="val"><span id="visits-v">4</span></span></div></div>
+    <div class="row"><label class="lbl" for="visit-rate">Ставка за виїзд</label><div class="controls"><input type="range" id="visit-rate" min="50" max="500" step="25" value="100"><span class="val">$<span id="visit-rate-v">100</span></span></div></div>
+  </div>
+  <div id="sup-fix" hidden>
+    <div class="row"><label class="lbl" for="fix-rate">Ставка на місяць</label><div class="controls"><input type="range" id="fix-rate" min="100" max="5000" step="100" value="500"><span class="val">$<span id="fix-rate-v">500</span></span></div></div>
+  </div>
+  <div class="result-box" id="res-4">Авторський нагляд не включено</div>
+  <div class="warn show" id="warn-sup">Авторський нагляд окупається тільки разом із комплектацією. Без неї — твій час коштує занадто мало.</div>
+</div>
+
+<div class="section-lbl" style="margin-top:24px;">Підсумок по проєкту</div>
+
+<div class="results">
+  <div class="metric"><div class="metric-lbl">Дохід з проєкту</div><div class="metric-val" id="r-total">—</div><div class="metric-sub">всього</div></div>
+  <div class="metric"><div class="metric-lbl">На місяць</div><div class="metric-val" id="r-month">—</div><div class="metric-sub">в середньому</div></div>
+  <div class="metric"><div class="metric-lbl">Чисте проєктування</div><div class="metric-val" id="r-design">—</div><div class="metric-sub">мінус команда</div></div>
+  <div class="metric"><div class="metric-lbl">Ціна години</div><div class="metric-val" id="r-hour">—</div><div class="metric-sub">проєктування</div></div>
+</div>
+
+<div class="breakdown">
+  <div class="section-lbl">З чого складається</div>
+  <div class="brow"><span class="blbl"><span class="dot dot-1"></span>Реферал від ріелтора</span><span class="bval" id="b-ref">—</span></div>
+  <div class="brow"><span class="blbl"><span class="dot dot-2"></span>Проєктування (чисте)</span><span class="bval" id="b-design">—</span></div>
+  <div class="brow"><span class="blbl"><span class="dot dot-3"></span>Комплектація</span><span class="bval" id="b-comp">—</span></div>
+  <div class="brow" id="brow-sup" hidden><span class="blbl"><span class="dot dot-4"></span>Авторський нагляд</span><span class="bval" id="b-sup">—</span></div>
+  <div class="brow"><span class="blbl">Разом</span><span class="bval" id="b-total">—</span></div>
+</div>
+
+<div class="insight" id="insight-box"></div>
+
+<footer>Калькулятор доходу дизайнера · Сегмент визначає дохід, а не досвід</footer>
+
+</div>
+<script>
+let supMode = 'off';
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('uk-UA'); }
+function fmtN(n) { return Math.round(n).toLocaleString('uk-UA'); }
+
+function setSupMode(m) {
+  supMode = m;
+  document.getElementById('sup-visit').hidden = m !== 'visit';
+  document.getElementById('sup-fix').hidden = m !== 'fix';
+  ['off','visit','fix'].forEach(x => document.getElementById('tog-'+x).classList.toggle('on', x === m));
+  document.getElementById('warn-sup').classList.toggle('show', m !== 'off');
+  calc();
+}
+['off','visit','fix'].forEach(x => document.getElementById('tog-'+x).addEventListener('click', () => setSupMode(x)));
+
+function bind(id, outId) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(outId);
+  el.addEventListener('input', () => {
+    out.textContent = fmtN(+el.value);
+    calc();
+  });
+}
+
+bind('prop-val','prop-val-v');
+bind('realtor-pct','realtor-pct-v');
+bind('ref-pct','ref-pct-v');
+bind('sqm','sqm-v');
+bind('rate-sqm','rate-sqm-v');
+bind('team-cost','team-cost-v');
+bind('design-months','design-months-v');
+bind('budget-sqm','budget-sqm-v');
+bind('comp-pct','comp-pct-v');
+bind('comp-months','comp-months-v');
+bind('visits','visits-v');
+bind('visit-rate','visit-rate-v');
+bind('fix-rate','fix-rate-v');
+
+function g(id) { return parseFloat(document.getElementById(id).value); }
+
+function calc() {
+  const propVal = g('prop-val');
+  const realtorPct = g('realtor-pct') / 100;
+  const refPct = g('ref-pct') / 100;
+  const realtorTotal = propVal * realtorPct;
+  const refTotal = realtorTotal * refPct;
+
+  const sqm = g('sqm');
+  const rateSqm = g('rate-sqm');
+  const teamCost = g('team-cost');
+  const designMonths = g('design-months');
+  const designNet = sqm * (rateSqm - teamCost);
+  const designHours = designMonths * 20 * 5;
+  const hourRate = designNet / designHours;
+
+  const budgetSqm = g('budget-sqm');
+  const compPct = g('comp-pct') / 100;
+  const compMonths = g('comp-months');
+  const totalBudget = sqm * budgetSqm;
+  const compTotal = totalBudget * compPct;
+
+  let supTotal = 0;
+  if (supMode === 'visit') {
+    supTotal = g('visits') * g('visit-rate') * compMonths;
+  } else if (supMode === 'fix') {
+    supTotal = g('fix-rate') * compMonths;
+  }
+
+  const projectTotal = designNet + compTotal + supTotal;
+  const totalMonths = Math.max(designMonths, compMonths);
+  const perMonth = projectTotal / totalMonths;
+  const grandTotal = refTotal + projectTotal;
+
+  document.getElementById('res-1').innerHTML =
+    'Ріелтор отримує <b>' + fmt(realtorTotal) + '</b> → твій реферал: <b>' + fmt(refTotal) + '</b>';
+
+  document.getElementById('res-2').innerHTML =
+    'Валовий дохід: <b>' + fmt(sqm * rateSqm) + '</b> · Чистий (мінус команда): <b>' + fmt(designNet) + '</b> · Ціна години: <b>' + Math.round(hourRate) + ' $/год</b>';
+
+  document.getElementById('res-3').innerHTML =
+    'Загальний бюджет закупівель: <b>' + fmt(totalBudget) + '</b> · Твоя комісія: <b>' + fmt(compTotal) + '</b> · На місяць: <b>' + fmt(compTotal / compMonths) + '</b>';
+
+  if (supMode === 'off') {
+    document.getElementById('res-4').textContent = 'Авторський нагляд не включено';
+  } else {
+    document.getElementById('res-4').innerHTML =
+      'Дохід за нагляд: <b>' + fmt(supTotal) + '</b> · На місяць: <b>' + fmt(supTotal / compMonths) + '</b>';
+  }
+
+  document.getElementById('brow-sup').hidden = supMode === 'off';
+
+  document.getElementById('r-total').textContent = fmt(projectTotal);
+  document.getElementById('r-month').textContent = fmt(perMonth);
+  document.getElementById('r-design').textContent = fmt(designNet);
+  document.getElementById('r-hour').textContent = Math.round(hourRate) + ' $';
+
+  document.getElementById('b-ref').textContent = fmt(refTotal);
+  document.getElementById('b-design').textContent = fmt(designNet);
+  document.getElementById('b-comp').textContent = fmt(compTotal);
+  document.getElementById('b-sup').textContent = fmt(supTotal);
+  document.getElementById('b-total').textContent = fmt(grandTotal);
+
+  const insight = document.getElementById('insight-box');
+  const compShare = Math.round(compTotal / grandTotal * 100);
+  if (compShare > 60) {
+    insight.innerHTML = '<b>' + compShare + '% твого доходу — це комплектація.</b> Саме тому сегмент визначає дохід, а не досвід і не ставка за м².';
+    insight.classList.add('show');
+  } else {
+    insight.classList.remove('show');
+  }
+}
+
+calc();
+</script>
+
+</body>
+</html>
